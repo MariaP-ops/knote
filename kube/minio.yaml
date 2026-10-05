@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+spec:
+  ports:
+    - name: api
+      port: 9000
+    - name: console
+      port: 9001
+  selector:
+    app: minio
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      securityContext:
+        fsGroup: 10001
+      containers:
+        - name: minio
+          image: rustfs/rustfs:latest
+          args: ["/data"]
+          env:
+            - name: RUSTFS_ACCESS_KEY
+              value: mykey
+            - name: RUSTFS_SECRET_KEY
+              value: mysecret
+          ports:
+            - containerPort: 9000
+            - containerPort: 9001
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
